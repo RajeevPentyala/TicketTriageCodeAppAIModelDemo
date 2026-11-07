@@ -1,0 +1,136 @@
+# Ticket Triage – Power Apps code app
+
+This sample shows you how to call an **AI Builder prompt** from a **Power Apps code app**. The app is built with React, Vite and Fluent UI v9. It calls the same prompt in two ways, and shows how many AI credits each call used.
+
+You paste a customer support ticket. The prompt returns a category, a priority, a one-line summary and a suggested reply.
+
+## What's in the app
+
+The app has three tabs.
+
+| Tab | What it does |
+| --- | --- |
+| **Triage** | Calls a Power Automate cloud flow. The flow runs the prompt and returns the result. |
+| **Direct Predict** | Calls the prompt directly through the Dataverse `Predict` action. No flow is involved. |
+| **AI usage** | Reads the `msdyn_aievent` table and lists each prompt call, its source, the LLM model and the estimated credits. |
+
+## Prerequisites
+
+- Node.js 22 or later.
+- A Power Platform environment with Dataverse and AI Builder (AI prompts) enabled.
+- Code apps turned on for the environment.
+- Maker permissions in the environment, and read access to the prompt for every user of the app.
+
+## Step 1: Create the AI prompt
+
+1. In Power Apps or Copilot Studio, create a prompt named **Ticket Triage**.
+2. Add one text input named `TicketText`.
+3. Set the output to **JSON**, with these fields: `category`, `priority`, `summary` and `suggestedReply`.
+4. Save and publish the prompt.
+5. Copy the prompt's ID (`msdyn_aimodelid`). You need it in Step 4.
+
+Example instruction:
+
+> Read the support ticket in `TicketText`. Return JSON with `category` (Billing, Technical, Account or Other), `priority` (High, Medium or Low), a one-sentence `summary`, and a short, polite `suggestedReply`.
+
+## Step 2: Create the cloud flow
+
+Create a **solution-aware** cloud flow named **Ticket Triage Flow**:
+
+1. Trigger: **When Power Apps calls a flow (V2)**, with one text input named `text`.
+2. Action: **Run a prompt** (AI Builder). Select **Ticket Triage** and map `TicketText` to `text`.
+3. Action: **Respond to a Power App or flow**. Return four text outputs: `category`, `priority`, `summary` and `suggestedReply`.
+4. Save the flow and copy its ID from the URL.
+
+## Step 3: Connect the app to your environment
+
+The repo doesn't include `power.config.json`, because that file holds your app and environment IDs. `power.config.example.json` shows its shape. Create your own file with the Power Apps CLI.
+
+```powershell
+git clone <this-repo-url>
+cd <repo-folder>
+npm install
+
+npx pa app init                  # Sign in, pick your environment and name the app
+npx pa app add flow --flow-id <your-flow-id>
+npx pa app add data-source --connector dataverse --table msdyn_aievent
+npx pa app add dataverse-api --api-name Predict
+```
+
+These commands regenerate the files in `src/generated` and `.power/schemas` for your environment. Keep the flow name **Ticket Triage Flow**, so the generated service is `TicketTriageFlowService`.
+
+## Step 4: Add the prompt ID
+
+1. Copy `.env.example` to `.env.local`.
+2. Set `VITE_TICKET_TRIAGE_MODEL_ID` to your prompt ID from Step 1.
+
+`.env.local` isn't committed. Vite adds the value to the app bundle when you build, so treat it as configuration, not a secret. If you change it, rebuild and redeploy.
+
+## Step 5: Build and deploy
+
+```powershell
+npm run build
+npx pa app push
+```
+
+Open the app URL that `pa app push` prints.
+
+## How the direct call works
+
+The **Direct Predict** tab calls the generated `PredictService`:
+
+```ts
+PredictService.Predict(
+  MODEL_ID,
+  '2.0',
+  undefined,
+  {
+    '@odata.type': '#Microsoft.Dynamics.CRM.expando',
+    TicketText: ticketText,
+    'TicketText@odata.type': 'String',
+  },
+  JSON.stringify({ consumptionSource: 'PowerApps', partnerSource: 'AIBuilder' }),
+)
+```
+
+The result is in `data.responsev2.predictionOutput`.
+
+## How credits are tracked
+
+Each prompt call writes a row to the `msdyn_aievent` table. The `msdyn_eventdata` column holds JSON like this:
+
+```json
+{
+  "messageConsumption": { "featureName": "Text and generative AI tools (basic)", "units": 2, "consumption": 0.2 },
+  "consumptionSource": "PowerAutomate",
+  "partnerSource": "AIBuilder",
+  "llmModelName": "gpt-41-mini-2025-04-14"
+}
+```
+
+The **AI usage** tab reads `consumption` as the estimated credits, and reads the prompt name from the `_msdyn_aimodelid_value` formatted value. Rows with `msdyn_quicktest = true` come from testing the prompt in the designer.
+
+## Lessons learned
+
+- **Predict needs `source`.** If you leave out the fifth argument, the call fails with *"Source is null"*.
+- **Flow outputs come back in lowercase.** The flow returns `suggestedReply` as `suggestedreply`, so read it without regard to case.
+- **Predict can't choose the model.** The LLM model is a prompt setting. To try another model, copy the prompt, change its model and call the copy's ID.
+- **Both paths cost the same.** A flow call and a direct call each used 0.2 credits for this prompt. The direct call shows up as `PowerApps` on the AI usage tab.
+- **Long runs can return HTTP 202.** The app shows a "Still running" message instead of polling.
+
+## Project structure
+
+```text
+src/
+  App.tsx               Tabs and the flow-based Triage tab
+  DirectPredictPage.tsx Direct Predict tab
+  AiUsagePage.tsx       AI usage tab
+  generated/            Services generated by the Power Apps CLI
+.power/schemas/         Data source schemas generated by the Power Apps CLI
+```
+
+## Learn more
+
+- [Power Apps code apps overview](https://learn.microsoft.com/power-apps/developer/code-apps/overview)
+- [Use your prompt in Power Automate](https://learn.microsoft.com/ai-builder/use-a-custom-prompt-in-flow)
+- [AI Builder credit management](https://learn.microsoft.com/ai-builder/credit-management)

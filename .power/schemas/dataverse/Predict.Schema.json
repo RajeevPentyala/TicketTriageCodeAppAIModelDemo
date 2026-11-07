@@ -1,0 +1,77 @@
+{
+  "name": "Predict",
+  "title": "Predict",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "Predict",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "Predict",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/msdyn_aimodels({id})/Microsoft.Dynamics.CRM.Predict": {
+          "post": {
+            "operationId": "Predict",
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "type": "string",
+                "format": "guid",
+                "x-ms-dataverse-type": "UniqueidentifierType",
+                "x-ms-csdl-type": "Edm.Guid"
+              },
+              {
+                "name": "version",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              },
+              {
+                "name": "request",
+                "in": "body",
+                "required": false,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              },
+              {
+                "name": "requestv2",
+                "in": "body",
+                "required": false,
+                "type": "object",
+                "x-ms-dataverse-type": "LookupType",
+                "x-ms-csdl-type": "mscrm.crmbaseentity"
+              },
+              {
+                "name": "source",
+                "in": "body",
+                "required": false,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Success",
+                "schema": {
+                  "type": "object",
+                  "x-ms-dataverse-type": "LookupType",
+                  "x-ms-csdl-type": "mscrm.PredictResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "entitySetName": "msdyn_aimodels"
+}

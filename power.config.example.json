@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "appId": "00000000-0000-0000-0000-000000000000",
+  "appDisplayName": "Ticket Triage",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "00000000-0000-0000-0000-000000000000",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {
+    "00000000-0000-0000-0000-000000000000": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+      "displayName": "Logic flows",
+      "dataSources": [
+        "tickettriageflow"
+      ],
+      "workflowDetails": {
+        "workflowEntityId": "00000000-0000-0000-0000-000000000000",
+        "workflowDisplayName": "Ticket Triage Flow",
+        "workflowName": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  },
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "aievents": {
+          "entitySetName": "msdyn_aievents",
+          "logicalName": "msdyn_aievent",
+          "isHidden": false
+        },
+        "environment_39a902ba": {
+          "entitySetName": "Environment",
+          "logicalName": "environment_39a902ba",
+          "isHidden": false
+        },
+        "aimodel": {
+          "entitySetName": "msdyn_aimodels",
+          "logicalName": "msdyn_aimodel",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}
