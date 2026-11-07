@@ -110,14 +110,6 @@ Each prompt call writes a row to the `msdyn_aievent` table. The `msdyn_eventdata
 
 The **AI usage** tab reads `consumption` as the estimated credits, and reads the prompt name from the `_msdyn_aimodelid_value` formatted value. Rows with `msdyn_quicktest = true` come from testing the prompt in the designer.
 
-## Lessons learned
-
-- **Predict needs `source`.** If you leave out the fifth argument, the call fails with *"Source is null"*.
-- **Flow outputs come back in lowercase.** The flow returns `suggestedReply` as `suggestedreply`, so read it without regard to case.
-- **Predict can't choose the model.** The LLM model is a prompt setting. To try another model, copy the prompt, change its model and call the copy's ID.
-- **Both paths cost the same.** A flow call and a direct call each used 0.2 credits for this prompt. The direct call shows up as `PowerApps` on the AI usage tab.
-- **Long runs can return HTTP 202.** The app shows a "Still running" message instead of polling.
-
 ## Project structure
 
 ```text
